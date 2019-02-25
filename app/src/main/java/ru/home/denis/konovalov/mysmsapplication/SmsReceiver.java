@@ -23,7 +23,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 body.append(messages[i].getMessageBody());
 
             String bodyText = body.toString();
-            Global.makeNote(context, new MySMS(smsFromPhone, bodyText, MySMS.InType.In), "2");
+            Global.makeNote(context, new MySMS(smsFromPhone, bodyText, System.currentTimeMillis(), MySMS.InType.In), "2");
 
             //Можно запустить службу с сохранением
 

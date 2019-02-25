@@ -59,17 +59,20 @@ public class MySMSAdapter extends RecyclerView.Adapter {
     private class InViewHolder extends RecyclerView.ViewHolder {
         private View avatar;
         private TextView username;
+        private TextView timestamp;
         private TextView text;
 
         public InViewHolder(View itemView) {
             super(itemView);
             avatar = itemView.findViewById(R.id.avatar);
             username = itemView.findViewById(R.id.username);
+            timestamp = itemView.findViewById(R.id.timestamp);
             text = itemView.findViewById(R.id.message);
         }
 
         public void bind(MySMS item) {
             username.setText(item.getPhone());
+            timestamp.setText(Global.timeLongToString(item.getTimeStamp()));
             text.setText(item.getMessage());
         }
     }

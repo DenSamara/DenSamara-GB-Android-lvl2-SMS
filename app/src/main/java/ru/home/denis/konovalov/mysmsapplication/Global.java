@@ -10,6 +10,8 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+
 public class Global {
 
     private static boolean showDebugInfo = true;
@@ -42,5 +44,10 @@ public class Global {
     public static void logE(String tag, String message) {
         if (showDebugInfo)
             Log.e(tag, message);
+    }
+
+    public static String timeLongToString(long currentTimeMillis) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        return sdf.format(currentTimeMillis);
     }
 }

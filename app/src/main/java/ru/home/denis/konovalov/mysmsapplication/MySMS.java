@@ -12,18 +12,21 @@ public class MySMS implements Parcelable {
 
     private String phone;
     private String message;
+    private long timestamp;
     private InType smsType;
 
-    public MySMS(String phone, String message, InType type){
+    public MySMS(String phone, String message, long timestamp, InType type){
         this.id++;
         this.phone = phone;
         this.message = message;
+        this.timestamp = timestamp;
         this.smsType = type;
     }
 
     protected MySMS(Parcel in) {
         phone = in.readString();
         message = in.readString();
+        timestamp = in.readLong();
         smsType = in.readByte() == 0 ? InType.In : InType.Out;
     }
 
@@ -45,6 +48,10 @@ public class MySMS implements Parcelable {
         return phone;
     }
 
+    public long getTimeStamp() {
+        return timestamp;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -62,6 +69,7 @@ public class MySMS implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(phone);
         dest.writeString(message);
+        dest.writeLong(timestamp);
         dest.writeByte(smsType == InType.In ? (byte)0 : (byte)1);
     }
 }

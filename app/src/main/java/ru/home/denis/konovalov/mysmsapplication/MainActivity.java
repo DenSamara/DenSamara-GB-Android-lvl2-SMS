@@ -11,6 +11,8 @@ import android.provider.Telephony;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
@@ -23,8 +25,12 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String TAG = MainActivity.class.getSimpleName();
+
     private SmsReceiver receiver;
     private ArrayList<MySMS> messages;
+    private MySMSAdapter adapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         setupReceivers();
 
+        recyclerView = findViewById(R.id.listView);
         messages = new ArrayList<>();
         LoadSms task = new LoadSms();
         task.execute();
@@ -94,6 +101,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class LoadSms extends AsyncTask<String, Void, String> {
+
+        public static final String COLUMN_ID = "_id";
+        public static final String COLUMN_THREAD_ID = "thread_id";
+        public static final String COLUMN_BODY = "body";
+        public static final String COLUMN_TYPE = "type";
+        public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_ADDRESS = "address";
+        public static final String TYPE_INBOX = "1";
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -105,24 +121,24 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Uri uriInbox = Uri.parse("content://sms/inbox");
 
-                Cursor inbox = getContentResolver().query(uriInbox, null, "address IS NOT NULL) GROUP BY (thread_id", null, null); // 2nd null = "address IS NOT NULL) GROUP BY (address"
+                Cursor inbox = getContentResolver().query(uriInbox, null, "address IS NOT NULL) GROUP BY (thread_id", null, null);
                 Uri uriSent = Uri.parse("content://sms/sent");
 
-                Cursor sent = getContentResolver().query(uriSent, null, "address IS NOT NULL) GROUP BY (thread_id", null, null); // 2nd null = "address IS NOT NULL) GROUP BY (address"
+                Cursor sent = getContentResolver().query(uriSent, null, "address IS NOT NULL) GROUP BY (thread_id", null, null);
                 Cursor c = new MergeCursor(new Cursor[]{inbox,sent}); // Attaching inbox and sent sms
 
                 if (c.moveToFirst()) {
                     for (int i = 0; i < c.getCount(); i++) {
                         String name = null;
                         String phone = "";
-                        String _id = c.getString(c.getColumnIndexOrThrow("_id"));
-                        String thread_id = c.getString(c.getColumnIndexOrThrow("thread_id"));
-                        String msg = c.getString(c.getColumnIndexOrThrow("body"));
-                        String type = c.getString(c.getColumnIndexOrThrow("type"));
-                        String timestamp = c.getString(c.getColumnIndexOrThrow("date"));
-                        phone = c.getString(c.getColumnIndexOrThrow("address"));
+                        String _id = c.getString(c.getColumnIndexOrThrow(COLUMN_ID));
+                        String thread_id = c.getString(c.getColumnIndexOrThrow(COLUMN_THREAD_ID));
+                        String msg = c.getString(c.getColumnIndexOrThrow(COLUMN_BODY));
+                        String type = c.getString(c.getColumnIndexOrThrow(COLUMN_TYPE));
+                        String timestamp = c.getString(c.getColumnIndexOrThrow(COLUMN_DATE));
+                        phone = c.getString(c.getColumnIndexOrThrow(COLUMN_ADDRESS));
 
-                        MySMS sms = new MySMS(phone, msg, MySMS.InType.In);
+                        MySMS sms = new MySMS(phone, msg, Long.parseLong(timestamp), type.equalsIgnoreCase(TYPE_INBOX) ? MySMS.InType.In : MySMS.InType.Out);
                         messages.add(sms);
 
                         c.moveToNext();
@@ -132,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
             }catch (IllegalArgumentException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+                Global.logE(TAG, e.toString());
             }
 
             return xml;
@@ -141,7 +157,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String xml) {
             messages.trimToSize();
-//            messages = Collections.sort(messages);
+
+            adapter = new MySMSAdapter(messages);
+            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            recyclerView.setAdapter(adapter);
         }
     }
 }

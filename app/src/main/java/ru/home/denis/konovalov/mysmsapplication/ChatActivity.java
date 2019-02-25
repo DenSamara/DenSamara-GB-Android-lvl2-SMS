@@ -2,6 +2,10 @@ package ru.home.denis.konovalov.mysmsapplication;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.MergeCursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -12,11 +16,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ListView;
 
 import java.util.ArrayList;
 
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = ChatActivity.class.getSimpleName();
+
     public static final String EXTRA_NUMBER = "ChatActivity.phoneNumber";
     public static final String EXTRA_MESSAGES = "ChatActivity.conversation";
 
@@ -50,7 +55,6 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         listView.setLayoutManager(new LinearLayoutManager(this));
         listView.setAdapter(adapter);
 
-
         piSending = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0);
     }
 
@@ -61,7 +65,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btSend:
                 String txt = editText.getText().toString();
                 if (!TextUtils.isEmpty(txt)){
-                    MySMS sms = new MySMS(number, txt, MySMS.InType.Out);
+                    MySMS sms = new MySMS(number, txt, System.currentTimeMillis(), MySMS.InType.Out);
                     sendMessage(sms, piSending, null);
 
                     conversation.add(sms);
@@ -78,5 +82,75 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         SmsManager manager = SmsManager.getDefault();
 
         manager.sendTextMessage(sms.getPhone(), null, sms.getMessage(), sending, receiving);
+    }
+
+    private class LoadSms extends AsyncTask<String, Void, String> {
+
+        public static final String COLUMN_ID = "_id";
+        public static final String COLUMN_THREAD_ID = "thread_id";
+        public static final String COLUMN_BODY = "body";
+        public static final String COLUMN_TYPE = "type";
+        public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_ADDRESS = "address";
+        public static final String TYPE_INBOX = "1";
+
+        private String number;
+
+        public LoadSms(String number){
+            this.number = number;
+        }
+
+        @Override
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+            conversation = new ArrayList<>();
+        }
+
+        protected String doInBackground(String... args) {
+            String xml = "";
+
+            try {
+                Uri uriInbox = Uri.parse("content://sms/inbox");
+
+                String where = String.format("%s IS NOT NULL AND %s = '%s'", COLUMN_ADDRESS, COLUMN_ADDRESS, number);
+                Cursor inbox = getContentResolver().query(uriInbox, null, where, null, null);
+                Uri uriSent = Uri.parse("content://sms/sent");
+
+                Cursor sent = getContentResolver().query(uriSent, null, where, null, null);
+                Cursor c = new MergeCursor(new Cursor[]{inbox,sent}); // Attaching inbox and sent sms
+
+                if (c.moveToFirst()) {
+                    for (int i = 0; i < c.getCount(); i++) {
+                        String name = null;
+                        String phone = "";
+                        String _id = c.getString(c.getColumnIndexOrThrow(COLUMN_ID));
+                        String thread_id = c.getString(c.getColumnIndexOrThrow(COLUMN_THREAD_ID));
+                        String msg = c.getString(c.getColumnIndexOrThrow(COLUMN_BODY));
+                        String type = c.getString(c.getColumnIndexOrThrow(COLUMN_TYPE));
+                        String timestamp = c.getString(c.getColumnIndexOrThrow(COLUMN_DATE));
+                        phone = c.getString(c.getColumnIndexOrThrow(COLUMN_ADDRESS));
+
+                        MySMS sms = new MySMS(phone, msg, Long.parseLong(timestamp), type.equalsIgnoreCase(TYPE_INBOX) ? MySMS.InType.In : MySMS.InType.Out);
+                        conversation.add(sms);
+
+                        c.moveToNext();
+                    }
+                }
+                c.close();
+
+            }catch (IllegalArgumentException e) {
+                // TODO Auto-generated catch block
+                Global.logE(TAG, e.toString());
+            }
+
+            return xml;
+        }
+
+        @Override
+        protected void onPostExecute(String xml) {
+            conversation.trimToSize();
+            adapter.setItems(conversation);
+        }
     }
 }
