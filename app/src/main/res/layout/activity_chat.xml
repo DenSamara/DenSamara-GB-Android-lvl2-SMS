@@ -8,9 +8,9 @@
     android:focusableInTouchMode="true"
     >
 
-    <ListView
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/lv_messages"
         android:layout_width="match_parent"
-        android:id="@+id/messages_view"
         android:layout_weight="2"
         android:divider="#fff"
         android:layout_height="wrap_content"

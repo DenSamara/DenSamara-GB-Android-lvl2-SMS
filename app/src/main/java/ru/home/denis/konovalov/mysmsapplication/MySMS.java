@@ -49,6 +49,10 @@ public class MySMS implements Parcelable {
         return message;
     }
 
+    public InType getType() {
+        return smsType;
+    }
+
     @Override
     public int describeContents() {
         return 0;

@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 
 import java.util.ArrayList;
 
@@ -22,6 +25,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private String number;
 
     private ArrayList<MySMS> conversation;
+    private MySMSAdapter adapter;
 
     private PendingIntent piSending;
 
@@ -33,14 +37,19 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         number = getIntent().getStringExtra(EXTRA_NUMBER);
         setTitle(number);
 
+        editText = findViewById(R.id.editText);
+        btSend = findViewById(R.id.btSend);
+        btSend.setOnClickListener(this);
+        RecyclerView listView = findViewById(R.id.lv_messages);
+
         conversation = getIntent().getParcelableArrayListExtra(EXTRA_MESSAGES);
         if (conversation == null){
             conversation = new ArrayList<>();
         }
+        adapter = new MySMSAdapter(conversation);
+        listView.setLayoutManager(new LinearLayoutManager(this));
+        listView.setAdapter(adapter);
 
-        editText = findViewById(R.id.editText);
-        btSend = findViewById(R.id.btSend);
-        btSend.setOnClickListener(this);
 
         piSending = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0);
     }
@@ -56,6 +65,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     sendMessage(sms, piSending, null);
 
                     conversation.add(sms);
+                    adapter.setItems(conversation);
                     //TODO перенести в обработку подтверждения отправки
                     editText.setText("");
                     Global.toast(this, getString(R.string.sended));

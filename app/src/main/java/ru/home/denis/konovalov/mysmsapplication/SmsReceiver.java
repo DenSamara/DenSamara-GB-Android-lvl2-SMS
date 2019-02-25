@@ -24,6 +24,9 @@ public class SmsReceiver extends BroadcastReceiver {
 
             String bodyText = body.toString();
             Global.makeNote(context, new MySMS(smsFromPhone, bodyText, MySMS.InType.In), "2");
+
+            //Можно запустить службу с сохранением
+
             abortBroadcast();   // Это будет работать только на Андроиде ниже 4.4
         }
     }

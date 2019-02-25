@@ -3,6 +3,9 @@ package ru.home.denis.konovalov.mysmsapplication;
 import android.app.IntentService;
 import android.content.Intent;
 
+/**
+ * Служба для быстрого ответа
+ */
 public class HeadlessSmsSendService extends IntentService {
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.

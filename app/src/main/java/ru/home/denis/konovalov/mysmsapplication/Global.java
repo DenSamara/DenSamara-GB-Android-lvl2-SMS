@@ -7,9 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.widget.Toast;
 
 public class Global {
+
+    private static boolean showDebugInfo = true;
 
     // вывод уведомления в строке состояния
     public static void makeNote(Context context, MySMS message, String channellID) {
@@ -34,5 +37,10 @@ public class Global {
 
     public static void toast(Context ctx, String txt){
         Toast.makeText(ctx, txt, Toast.LENGTH_LONG).show();
+    }
+
+    public static void logE(String tag, String message) {
+        if (showDebugInfo)
+            Log.e(tag, message);
     }
 }
