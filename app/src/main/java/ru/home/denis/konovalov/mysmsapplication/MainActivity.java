@@ -23,7 +23,8 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 public class MainActivity extends AppCompatActivity {
-    SmsReceiver receiver;
+    private SmsReceiver receiver;
+    private ArrayList<MySMS> messages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +41,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent startChatActivity = new Intent(MainActivity.this, ChatActivity.class);
                 startChatActivity.putExtra(ChatActivity.EXTRA_NUMBER, "+79879118324");
+                startChatActivity.putExtra(ChatActivity.EXTRA_MESSAGES, messages);
                 startActivity(startChatActivity);
             }
         });
 
         setupReceivers();
+
+        messages = new ArrayList<>();
+        LoadSms task = new LoadSms();
+        task.execute();
     }
 
     /**
@@ -105,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
                 Cursor sent = getContentResolver().query(uriSent, null, "address IS NOT NULL) GROUP BY (thread_id", null, null); // 2nd null = "address IS NOT NULL) GROUP BY (address"
                 Cursor c = new MergeCursor(new Cursor[]{inbox,sent}); // Attaching inbox and sent sms
 
-
                 if (c.moveToFirst()) {
                     for (int i = 0; i < c.getCount(); i++) {
                         String name = null;
@@ -116,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
                         String type = c.getString(c.getColumnIndexOrThrow("type"));
                         String timestamp = c.getString(c.getColumnIndexOrThrow("date"));
                         phone = c.getString(c.getColumnIndexOrThrow("address"));
+
+                        MySMS sms = new MySMS(phone, msg, MySMS.InType.In);
+                        messages.add(sms);
 
                         c.moveToNext();
                     }
@@ -132,7 +140,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String xml) {
-
+            messages.trimToSize();
+//            messages = Collections.sort(messages);
         }
     }
 }
