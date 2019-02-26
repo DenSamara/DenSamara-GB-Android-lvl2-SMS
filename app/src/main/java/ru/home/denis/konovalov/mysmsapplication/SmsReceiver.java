@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.telephony.SmsMessage;
 
+import ru.home.denis.konovalov.mysmsapplication.model.MySms;
+
 public class SmsReceiver extends BroadcastReceiver {
 
     public static final String PDUS = "pdus";
@@ -23,7 +25,7 @@ public class SmsReceiver extends BroadcastReceiver {
                 body.append(messages[i].getMessageBody());
 
             String bodyText = body.toString();
-            Global.makeNote(context, new MySMS(smsFromPhone, bodyText, System.currentTimeMillis(), MySMS.InType.In), "2");
+            Global.makeNote(context, new MySms(smsFromPhone, bodyText, System.currentTimeMillis(), MySms.InType.In), "2");
 
             //Можно запустить службу с сохранением
 

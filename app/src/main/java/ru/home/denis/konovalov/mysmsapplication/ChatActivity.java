@@ -19,6 +19,9 @@ import android.widget.ImageButton;
 
 import java.util.ArrayList;
 
+import ru.home.denis.konovalov.mysmsapplication.adapter.MySmsAdapter;
+import ru.home.denis.konovalov.mysmsapplication.model.MySms;
+
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = ChatActivity.class.getSimpleName();
 
@@ -29,8 +32,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton btSend;
     private String number;
 
-    private ArrayList<MySMS> conversation;
-    private MySMSAdapter adapter;
+    private ArrayList<MySms> conversation;
+    private MySmsAdapter adapter;
 
     private PendingIntent piSending;
 
@@ -51,7 +54,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         if (conversation == null){
             conversation = new ArrayList<>();
         }
-        adapter = new MySMSAdapter(conversation);
+        adapter = new MySmsAdapter(conversation);
         listView.setLayoutManager(new LinearLayoutManager(this));
         listView.setAdapter(adapter);
 
@@ -65,7 +68,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btSend:
                 String txt = editText.getText().toString();
                 if (!TextUtils.isEmpty(txt)){
-                    MySMS sms = new MySMS(number, txt, System.currentTimeMillis(), MySMS.InType.Out);
+                    MySms sms = new MySms(number, txt, System.currentTimeMillis(), MySms.InType.Out);
                     sendMessage(sms, piSending, null);
 
                     conversation.add(sms);
@@ -78,7 +81,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public static void sendMessage(MySMS sms, PendingIntent sending, PendingIntent receiving) {
+    public static void sendMessage(MySms sms, PendingIntent sending, PendingIntent receiving) {
         SmsManager manager = SmsManager.getDefault();
 
         manager.sendTextMessage(sms.getPhone(), null, sms.getMessage(), sending, receiving);
@@ -131,7 +134,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         String timestamp = c.getString(c.getColumnIndexOrThrow(COLUMN_DATE));
                         phone = c.getString(c.getColumnIndexOrThrow(COLUMN_ADDRESS));
 
-                        MySMS sms = new MySMS(phone, msg, Long.parseLong(timestamp), type.equalsIgnoreCase(TYPE_INBOX) ? MySMS.InType.In : MySMS.InType.Out);
+                        MySms sms = new MySms(phone, msg, Long.parseLong(timestamp), type.equalsIgnoreCase(TYPE_INBOX) ? MySms.InType.In : MySms.InType.Out);
                         conversation.add(sms);
 
                         c.moveToNext();

@@ -1,9 +1,9 @@
-package ru.home.denis.konovalov.mysmsapplication;
+package ru.home.denis.konovalov.mysmsapplication.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MySMS implements Parcelable {
+public class MySms implements Parcelable {
     public enum InType {
         In, Out
     }
@@ -15,7 +15,7 @@ public class MySMS implements Parcelable {
     private long timestamp;
     private InType smsType;
 
-    public MySMS(String phone, String message, long timestamp, InType type){
+    public MySms(String phone, String message, long timestamp, InType type){
         this.id++;
         this.phone = phone;
         this.message = message;
@@ -23,22 +23,22 @@ public class MySMS implements Parcelable {
         this.smsType = type;
     }
 
-    protected MySMS(Parcel in) {
+    protected MySms(Parcel in) {
         phone = in.readString();
         message = in.readString();
         timestamp = in.readLong();
         smsType = in.readByte() == 0 ? InType.In : InType.Out;
     }
 
-    public static final Creator<MySMS> CREATOR = new Creator<MySMS>() {
+    public static final Creator<MySms> CREATOR = new Creator<MySms>() {
         @Override
-        public MySMS createFromParcel(Parcel in) {
-            return new MySMS(in);
+        public MySms createFromParcel(Parcel in) {
+            return new MySms(in);
         }
 
         @Override
-        public MySMS[] newArray(int size) {
-            return new MySMS[size];
+        public MySms[] newArray(int size) {
+            return new MySms[size];
         }
     };
 
