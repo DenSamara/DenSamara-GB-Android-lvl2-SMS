@@ -20,7 +20,7 @@ public class MySmsItemDetail extends ItemDetailsLookup.ItemDetails {
 
     @Nullable
     @Override
-    public MySms getSelectionKey() {
+    public Object getSelectionKey() {
         return selectionKey;
     }
 }

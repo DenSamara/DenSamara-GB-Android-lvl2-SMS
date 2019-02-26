@@ -3,6 +3,9 @@ package ru.home.denis.konovalov.mysmsapplication.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 public class MySms implements Parcelable {
     public enum InType {
         In, Out
@@ -71,5 +74,17 @@ public class MySms implements Parcelable {
         dest.writeString(message);
         dest.writeLong(timestamp);
         dest.writeByte(smsType == InType.In ? (byte)0 : (byte)1);
+    }
+
+    public static ArrayList<MySms> getRandomList() {
+        Random random = new Random();
+        ArrayList<MySms> items = new ArrayList<>();
+        MySms item;
+        for (int i = 1; i <= 100; i++) {
+            item = new MySms(Float.toString(random.nextFloat() * 10000000), "Message number " + i, System.currentTimeMillis(), i % 2 == 0 ? InType.In : InType.Out);
+            items.add(item);
+        }
+
+        return items;
     }
 }

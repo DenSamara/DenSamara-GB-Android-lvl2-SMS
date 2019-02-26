@@ -3,4 +3,7 @@
     <string name="action_settings">Settings</string>
     <string name="sended">Успешно отправлено</string>
     <string name="username">User</string>
+    <string name="nav_header_desc">Descriprion</string>
+    <string name="nav_header_title">Title</string>
+    <string name="nav_header_subtitle">Subtitle</string>
 </resources>

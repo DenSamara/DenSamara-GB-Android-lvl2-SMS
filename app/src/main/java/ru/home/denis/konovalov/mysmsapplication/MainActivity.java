@@ -25,6 +25,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.selection.OnDragInitiatedListener;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import ru.home.denis.konovalov.mysmsapplication.adapter.MySmsAdapter;
@@ -40,9 +42,11 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<MySms> messages;
     private MySmsAdapter adapter;
     private MenuItem selectedItemCount;
-    private SelectionTracker mTracker;
+    private SelectionTracker selectionTracker;
     private ActionMode actionMode;
+    private RecyclerView.LayoutManager layoutManager;
     private RecyclerView recyclerView;
+    private SelectionTracker.SelectionObserver observer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,19 +71,81 @@ public class MainActivity extends AppCompatActivity {
         setupReceivers();
 
         recyclerView = findViewById(R.id.listView);
-        messages = new ArrayList<>();
-        LoadSms task = new LoadSms();
-        task.execute();
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
-        if (savedInstanceState != null){
-            mTracker.onRestoreInstanceState(savedInstanceState);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+
+        messages = MySms.getRandomList();
+
+        setupTracker();
+
+        setupAdapter();
+
+        if (savedInstanceState != null) {
+            if (selectionTracker != null)
+                selectionTracker.onRestoreInstanceState(savedInstanceState);
+        }
+
+//        LoadSms task = new LoadSms();
+//        task.execute();
+    }
+
+    private void setupTracker() {
+        try{
+            selectionTracker = new SelectionTracker.Builder<>(MY_SELECTION_ID,
+                    recyclerView,
+                    new MySmsKeyProvider(1, messages),
+                    new MySmsLookup(recyclerView),
+                    StorageStrategy.createLongStorage()
+            )
+                    .withOnDragInitiatedListener(new OnDragInitiatedListener() {
+                        @Override
+                        public boolean onDragInitiated(@NonNull MotionEvent e) {
+                            Global.logE(TAG, "onDragInitiated");
+                            return true;
+                        }
+                    })
+                    .withOnDragInitiatedListener(new OnDragInitiatedListener() {
+                        @Override
+                        public boolean onDragInitiated(@NonNull MotionEvent e) {
+                            Global.logE(TAG, "onDragInitiated");
+                            return true;
+                        }
+
+                    })
+                    .build();
+
+            observer = new SelectionTracker.SelectionObserver() {
+                @Override
+                public void onSelectionChanged() {
+                    super.onSelectionChanged();
+                    if (selectionTracker.hasSelection() && actionMode == null) {
+                        actionMode = startSupportActionMode(new ActionModeController(MainActivity.this, selectionTracker));
+                        setMenuItemTitle(selectionTracker.getSelection().size());
+                    } else if (!selectionTracker.hasSelection() && actionMode != null) {
+                        actionMode.finish();
+                        actionMode = null;
+                    } else {
+                        setMenuItemTitle(selectionTracker.getSelection().size());
+                    }
+                    Iterator<MySms> itemIterable = selectionTracker.getSelection().iterator();
+                    while (itemIterable.hasNext()) {
+                        Global.logE(TAG, String.format("id=%d, number=%s", itemIterable.next().getID(), itemIterable.next().getPhone()));
+                    }
+                }
+            };
+        }catch (Exception e){
+            Global.logE(TAG, e.toString());
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
-        mTracker.onSaveInstanceState(outState);
+        if (selectionTracker != null) selectionTracker.onSaveInstanceState(outState);
     }
 
     /**
@@ -108,10 +174,10 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        switch (id){
+        switch (id) {
             case R.id.action_clear:
                 //Убираем выделение
-                mTracker.clearSelection();
+                selectionTracker.clearSelection();
                 return true;
         }
 
@@ -150,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                 Uri uriSent = Uri.parse("content://sms/sent");
 
                 Cursor sent = getContentResolver().query(uriSent, null, "address IS NOT NULL) GROUP BY (thread_id", null, null);
-                Cursor c = new MergeCursor(new Cursor[]{inbox,sent}); // Attaching inbox and sent sms
+                Cursor c = new MergeCursor(new Cursor[]{inbox, sent}); // Attaching inbox and sent sms
 
                 if (c.moveToFirst()) {
                     for (int i = 0; i < c.getCount(); i++) {
@@ -171,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 c.close();
 
-            }catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 // TODO Auto-generated catch block
                 Global.logE(TAG, e.toString());
             }
@@ -189,43 +255,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupAdapter() {
         adapter = new MySmsAdapter(messages);
-        mTracker = new SelectionTracker.Builder<>(
-                MY_SELECTION_ID,
-                recyclerView,
-                new MySmsKeyProvider(1, messages),
-                new MySmsLookup(recyclerView),
-                StorageStrategy.createLongStorage()
-        ).withOnDragInitiatedListener(new OnDragInitiatedListener() {
-            @Override
-            public boolean onDragInitiated(@NonNull MotionEvent e) {
-                Global.logE(TAG, "onDragInitiated");
-                return true;
-            }
-        }).build();
 
-        mTracker.addObserver(new SelectionTracker.SelectionObserver() {
-                                 @Override
-                                 public void onSelectionChanged() {
-                                     super.onSelectionChanged();
-                                     if (mTracker.hasSelection() && actionMode == null) {
-                                         actionMode = startSupportActionMode(new ActionModeController(MainActivity.this, mTracker));
-                                         setMenuItemTitle(mTracker.getSelection().size());
-                                     } else if (!mTracker.hasSelection() && actionMode != null) {
-                                         actionMode.finish();
-                                         actionMode = null;
-                                     } else {
-                                         setMenuItemTitle(mTracker.getSelection().size());
-                                     }
-                                     Iterator<MySms> itemIterable = mTracker.getSelection().iterator();
-                                     while (itemIterable.hasNext()) {
-                                         Global.logE(TAG, String.format("id=%d, number=%s", itemIterable.next().getID(), itemIterable.next().getPhone()));
-                                     }
-                                 }
-                             });
-
-        adapter.setSelectionTracker(mTracker);
-        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         recyclerView.setAdapter(adapter);
+        if (selectionTracker != null && observer != null) {
+            adapter.setSelectionTracker(selectionTracker);
+            selectionTracker.addObserver(observer);
+        }
     }
 
     public void setMenuItemTitle(int selectedItemSize) {

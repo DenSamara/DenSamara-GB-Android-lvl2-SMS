@@ -8,7 +8,7 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import ru.home.denis.konovalov.mysmsapplication.model.MySms;
 
 public class MySmsKeyProvider extends ItemKeyProvider {
-    private ArrayList<MySms> items;
+    private final ArrayList<MySms> items;
     /**
      * Creates a new provider with the given scope.
      *
@@ -21,7 +21,7 @@ public class MySmsKeyProvider extends ItemKeyProvider {
 
     @Nullable
     @Override
-    public MySms getKey(int position) {
+    public Object getKey(int position) {
         return items.get(position);
     }
 

@@ -1,6 +1,5 @@
 package ru.home.denis.konovalov.mysmsapplication.adapter;
 
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +7,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.RecyclerView;
 import ru.home.denis.konovalov.mysmsapplication.Global;
@@ -50,10 +51,7 @@ public class MySmsAdapter extends RecyclerView.Adapter<MySmsAdapter.SmsViewHolde
     public void onBindViewHolder(@NonNull SmsViewHolder holder, int position) {
         MySms item = mItems.get(position);
         if (item != null)
-            if (holder instanceof InViewHolder)
-                (holder).bind(item, selectionTracker.isSelected(item));
-            else if (holder instanceof OutViewHolder)
-                (holder).bind(item, selectionTracker.isSelected(item));
+            (holder).bind(item, selectionTracker != null ? selectionTracker.isSelected(item) : false);
     }
 
     @Override
@@ -86,7 +84,7 @@ public class MySmsAdapter extends RecyclerView.Adapter<MySmsAdapter.SmsViewHolde
         }
 
         @Override
-        public MySmsItemDetail getItemDetails() {
+        public ItemDetailsLookup.ItemDetails getItemDetails() {
             return new MySmsItemDetail(getAdapterPosition(), mItems.get(getAdapterPosition()));
         }
     }
@@ -104,8 +102,8 @@ public class MySmsAdapter extends RecyclerView.Adapter<MySmsAdapter.SmsViewHolde
             timestamp = itemView.findViewById(R.id.timestamp);
         }
 
-        public void bind(MySms item) {
-            super.bind(item, selectionTracker.isSelected(item));
+        public void bind(MySms item, boolean isActive) {
+            super.bind(item, isActive);
             username.setText(item.getPhone());
             timestamp.setText(Global.timeLongToString(item.getTimeStamp()));
         }
@@ -116,8 +114,9 @@ public class MySmsAdapter extends RecyclerView.Adapter<MySmsAdapter.SmsViewHolde
             super(itemView);
         }
 
-        public void bind(MySms item) {
-            super.bind(item, selectionTracker.isSelected(item));
+        public void bind(MySms item, boolean isActive)
+        {
+            super.bind(item, isActive);
         }
     }
 }
